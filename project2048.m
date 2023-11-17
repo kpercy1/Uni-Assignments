@@ -1,0 +1,73 @@
+%This is the program to produce the game 2048, operated by the arrow keys. 
+% It will record and display the score and highscore for the username 
+% entered by the user, and will display messages when the game has been 
+% completed (the 2048 tile has been obtained), when a new highscore has 
+% been acheived and when there are no more possible moves (when the game is 
+% over)
+
+%Obtain a username from the user
+username=getUsername();
+
+%Retrieve the highscore for the given username
+highscore=getHighscore(username);
+
+%Initisalise the grid used to play the game
+grid=zeros(4, 4);
+grid=insertRandomTile(grid);
+
+%Initialise score and variables which track when the game is complete, a new
+%highscore has been acheived and the game is over
+gameOver=0;
+gameComplete=0;
+newHighscoreAcheived=0;
+score=0;
+
+%Initialise the figure used to play the game
+gameWindow=figure('Name','2048','NumberTitle','off', 'Color', 'white', 'WindowState', 'maximized', 'MenuBar', 'none');
+title('2048')
+ax=gca;
+%The following code was obtained from https://au.mathworks.com/matlabcentral/answers/369399-removing-the-grey-margin-of-a-plot
+outerpos = ax.OuterPosition;
+ti = ax.TightInset; 
+left = outerpos(1); %+ ti(1);
+bottom = outerpos(2); %+ ti(2);
+ax_width = outerpos(3); %- ti(1) - ti(3);
+ax_height = outerpos(4);
+ax.Position = [left bottom ax_width ax_height-0.1];
+
+%Plot the grid on the figure created
+gameWindow=plotImage(grid, score, highscore, newHighscoreAcheived, gameComplete, gameOver);
+
+%Continue playing the game until the game is over
+while gameOver==0
+
+    %Wait until the user presses an arrow key
+    key=getKeyboardPress(grid);
+
+    %Apply changes to the grid according to the key pressed by the user.
+    % This involves first merging tiles with the same value if necessary (as
+    % per the rules of 2048), then shifting cells in the direction of the
+    % arrow key pressed.
+    [grid, score]=mergeCells(key, grid, score);
+    grid=shiftGrid(key, grid);
+
+    %Add another tile (with value 2 or 4) to any of the empty tiles
+    grid=insertRandomTile(grid);
+
+    %Check whether the game has been complete, whether a new highscore has 
+    % been acheived and whether the game is over. Note these are
+    % not mutually-exclusive. For example, a user could complete the game,
+    % obtain a new highscore and 'lose' the game (in that there are no
+    % more valid moves) in a single turn.
+    gameComplete=gameCompleteCheck(gameComplete, grid, username);
+    [newHighscoreAcheived, highscore]=newHighscoreCheck(newHighscoreAcheived, score, highscore, username);
+    gameOver=gameOverCheck(grid);
+
+    %Re-plot the grid after all changes are applied
+    gameWindow=plotImage(grid, score, highscore, newHighscoreAcheived, gameComplete, gameOver);
+end
+
+%Display message to the user when the game is over. Note a message is also
+% displayed to the user on the figure once the game is over, but this is in
+% the plotImage function
+disp('Game Over!')
